@@ -83,10 +83,11 @@ plot(perf, colorize = TRUE, main = "Logistic")
 auc <- performance(pred, "auc")@y.values[[1]]
 auc
 
-df <- data.frame(cut = perf@alpha.values[[1]], sens = perf@x.values[[1]], spec = perf@y.values[[1]])
+df <- data.frame(cut = perf@alpha.values[[1]], sens = perf@y.values[[1]], spec = perf@x.values[[1]])
 df$add <- df$sens + df$spec
 df$one <- abs(df$add - 1)
 df$distance <- sqrt((1 - df$spec)^2 + (0 - df$sens)^2)
+df$spec <- 1 - df$spec
 
 # Returns the optimal cutpoint for maximize AUC?
 df[order(df$distance, decreasing = FALSE),][1,]
