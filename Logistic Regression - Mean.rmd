@@ -30,7 +30,7 @@ mean(cv_err)
 ```
 
 
-AUC/Accuracy Maximization
+Manual AUC/Accuracy Maximization
 ```{r, warning = FALSE}
 set.seed(1234)
 library(pROC)
