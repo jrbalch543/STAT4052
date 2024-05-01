@@ -1,0 +1,96 @@
+Logistic Regression Model
+```{r}
+library(caret)
+set.seed(1234)
+cv_err = rep(NA, 10)
+predictions = rep(NA, nrow(data_imp))
+re_indexed_data_imp <- data_imp
+rownames(re_indexed_data_imp) <- 1:nrow(re_indexed_data_imp)
+
+folds = createFolds(1:nrow(data_imp), k=10, list=F)
+for (i in 1:10){
+  k_ind = (fold == i)
+  train = data_imp[!k_ind, ]
+  test = data_imp[k_ind, ]
+  log_mod <- glm(HeartDiseaseorAttack ~., data = train, family = "binomial")
+  log_mod_stepped <- step(log_mod, direction = "both")
+  print(log_mod_stepped$coefficients)
+
+  for(j in row.names(test)){
+    predictions[as.integer(j)] <- predict(log_mod_stepped, test[j,], type = "response")
+  }
+
+  p_Heart <- ifelse(predict(log_mod_stepped, test, type = "response") > 0.5, 1, 0)
+  err = mean(p_Heart != test$HeartDiseaseorAttack)
+  cv_err[i] = err
+}
+mean(cv_err)
+```
+
+
+AUC/Accuracy Maximization
+```{r, warning = FALSE}
+set.seed(1234)
+library(pROC)
+thresholds <- seq(0.01, 0.9, 0.01)
+auc_vals <- vector("numeric", length(thresholds))
+accuracy <- vector("numeric", length(thresholds))
+
+for (i in 1:length(thresholds)){
+  pred <- ifelse(predictions > thresholds[i], 1, 0)
+  
+  accuracy[i] <- mean((pred - (as.numeric(data_imp$HeartDiseaseorAttack)-1))^2)
+  
+  myroc <- roc((as.numeric(data_imp$HeartDiseaseorAttack)-1), pred)
+  auc_vals[i] <- myroc$auc
+}
+
+which(auc_vals == max(auc_vals))
+auc_vals[which(auc_vals == max(auc_vals))]
+
+which(accuracy == min(accuracy))
+accuracy[which(accuracy == min(accuracy))]
+```
+
+
+Chosen Threshold/Accuracy Test
+```{r}
+set.seed(1234)
+pred <- ifelse(predictions > 0.5, 1, 0)
+  
+accuracy_final <- mean((pred - (as.numeric(data_imp$HeartDiseaseorAttack)-1))^2)
+  
+myroc_final <- roc((as.numeric(data_imp$HeartDiseaseorAttack)-1), pred)
+  
+  
+accuracy_final
+myroc_final$auc
+
+plot(myroc_final)
+table(pred, data_imp$HeartDiseaseorAttack)
+
+# 0.5 Threshold -> 0.08967972 accuracy & 0.5304 AUC
+# 0.09 Threshold -> 0.27772242 accuracy & 0.7438 AUC
+```
+
+
+Total Model ROC and AUC
+```{r}
+library(ROCR)
+
+pred <- prediction(predictions, data_imp$HeartDiseaseorAttack)
+perf <- performance(pred, "tpr", "fpr")
+
+plot(perf, colorize = TRUE, main = "Logistic")
+auc <- performance(pred, "auc")@y.values[[1]]
+auc
+
+df <- data.frame(cut = perf@alpha.values[[1]], sens = perf@y.values[[1]], spec = perf@x.values[[1]])
+df$add <- df$sens + df$spec
+df$one <- abs(df$add - 1)
+df$distance <- sqrt((1 - df$spec)^2 + (0 - df$sens)^2)
+df$spec <- 1 - df$spec
+
+# Returns the optimal cutpoint for maximize AUC?
+df[order(df$distance, decreasing = FALSE),][1,]
+```
