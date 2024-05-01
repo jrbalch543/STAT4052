@@ -14,4 +14,5 @@ Then, Regression Imputation.R can be run and that will set up the 3 models for t
 
 ## Sources
 (1) Schmidt, Pascal. “Assumption Checking of LDA vs. QDA – R Tutorial (Pima Indians Data Set).” *Thatdatatho*, 15 Jan. 2021, thatdatatho.com/assumption-checking-lda-vs-qda-r-tutorial-2/.
+  
   Used for LDA Assumption Checking
