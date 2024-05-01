@@ -1,15 +1,13 @@
 LDA Assumptions
 ```{r}
-assump <- na.omit(read.table("heart_disease3.txt"))
-
 library(heplots)
-boxm <- heplots::boxM(assump[,2:11], assump$HeartDiseaseorAttack)
+boxm <- heplots::boxM(assump[,2:11], heart$HeartDiseaseorAttack)
 boxm
 plot(boxm)
 
 
-heart.yes <- subset(assump, HeartDiseaseorAttack == 1)
-heart.no <- subset(assump, HeartDiseaseorAttack == 0)
+heart.yes <- subset(heart, HeartDiseaseorAttack == 1)
+heart.no <- subset(heart, HeartDiseaseorAttack == 0)
 
 qqnorm(heart.yes[["BMI"]]); qqline(heart.yes[["BMI"]], col = 2) 
 
