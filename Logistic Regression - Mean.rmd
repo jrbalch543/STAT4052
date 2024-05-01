@@ -1,5 +1,7 @@
 Logistic Regression Model
 ```{r}
+data_mean <- heart_no_na
+
 library(caret)
 set.seed(1234)
 cv_err = rep(NA, 10)
