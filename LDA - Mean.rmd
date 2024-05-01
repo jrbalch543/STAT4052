@@ -37,6 +37,7 @@ varImp(lda_mod)
 
 Cross Validated Predictions
 ```{r, warning = FALSE}
+library(MASS)
 set.seed(1234)
 K = 10
 fold = createFolds(1:nrow(heart_no_na), k = K, list = FALSE)
