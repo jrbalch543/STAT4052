@@ -1,6 +1,6 @@
 library(nnet)
 set.seed(1234)
-data_imp <- data_raw
+data_imp <- heart_no_na
 summary(data_imp)
 
 data_imp$HeartDiseaseorAttack[is.na(data_raw$HeartDiseaseorAttack)] <- ifelse(mean(as.numeric(data_raw$HeartDiseaseorAttack) - 1, na.rm = T) > 0.5, 1, 0)
