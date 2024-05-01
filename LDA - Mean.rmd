@@ -89,6 +89,11 @@ which(accuracy == min(accuracy))
 accuracy[which(accuracy == min(accuracy))]
 # 83
 # 0.08932384
+
+# For 0.5:
+pred <- ifelse(predictions > 0.5, 1, 0)
+mean(pred != (as.numeric(heart_no_na$HeartDiseaseorAttack)-1))
+# 0.0980
 ```
 
 Total Model ROC and AUC
