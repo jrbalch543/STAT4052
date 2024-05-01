@@ -91,30 +91,6 @@ accuracy[which(accuracy == min(accuracy))]
 # 0.08932384
 ```
 
-
-# If we wanted to truly find the optimal decision threshold we would need to consider the specific costs associated with false positives and false negatives.
-
-Chosen Threshold/Accuracy Test
-```{r}
-set.seed(1234)
-pred <- ifelse(predictions > 0.08146426, 1, 0)
-  
-accuracy_final <- mean((pred - (as.numeric(heart_no_na$HeartDiseaseorAttack)-1))^2)
-  
-myroc_final <- roc((as.numeric(heart_no_na$HeartDiseaseorAttack)-1), pred)
-  
-  
-accuracy_final
-myroc_final$auc
-
-plot(myroc_final)
-table(pred, heart_no_na$HeartDiseaseorAttack)
-
-# 0.5 Threshold -> 0.09697509 accuracy & 0.5568 AUC
-# 0.06 Threshold -> 0.3354093 accuracy & 0.736 AUC
-```
-
-
 Total Model ROC and AUC
 ```{r}
 library(ROCR)
@@ -127,11 +103,34 @@ auc <- performance(pred, "auc")@y.values[[1]]
 auc
 
 df <- data.frame(cut = perf@alpha.values[[1]], sens = perf@y.values[[1]], spec = perf@x.values[[1]])
-df$add <- df$sens + df$spec
-df$one <- abs(df$add - 1)
 df$distance <- sqrt((1 - df$sens)^2 + (0 - df$spec)^2)
 df$spec <- 1 - df$spec
 
-# Returns the optimal cutpoint for maximize AUC?
+# Returns the optimal cutpoint for maximize AUC
 df[order(df$distance, decreasing = FALSE),][1,]
 ```
+
+
+# If we wanted to truly find the optimal decision threshold we would need to consider the specific costs associated with false positives and false negatives.
+
+Chosen Threshold/Accuracy Test
+```{r}
+set.seed(1234)
+cutoff <- df[order(df$distance, decreasing = FALSE),][1,1]
+
+pred <- ifelse(predictions > cutoff, 1, 0)
+  
+accuracy_final <- mean((pred - (as.numeric(heart_no_na$HeartDiseaseorAttack)-1))^2)
+  
+myroc_final <- roc((as.numeric(heart_no_na$HeartDiseaseorAttack)-1), pred)
+  
+  
+accuracy_final
+myroc_final$auc
+
+plot(myroc_final)
+table(pred, heart_no_na$HeartDiseaseorAttack)
+```
+
+
+
