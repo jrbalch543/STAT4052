@@ -9,7 +9,7 @@ for (m in mvec) {
 }
 
 cbind(mvec, oob)
-#8.93% OOB ER with m = 2
+#9.20% OOB ER with m = 2
 
 #proportion of 1s predicted
 optM = randomForest(factor(HeartDiseaseorAttack) ~ ., data = data_imp, mtry = 2, importance = T)
