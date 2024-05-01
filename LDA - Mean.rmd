@@ -1,4 +1,5 @@
 LDA Assumptions
+(1)
 ```{r}
 library(heplots)
 boxm <- heplots::boxM(heart_og[,2:11], heart_og$HeartDiseaseorAttack)
