@@ -7,6 +7,6 @@ Then, Regression Imputation.R can be run and that will set up the 3 models for t
 
 ## Flow of Code
 1) Original Setup.R
-2) Logistic Regression/LDA/Random Forest - Mean.rmd
+2) Logistic Regression/LDA/Random Forest - Mean.rmds
 3) Regression Imputation.R
-4) Logistic Regression/LDA/Random Forest - Regression.rmd
+4) Logistic Regression/LDA/Random Forest - Regression.rmds
