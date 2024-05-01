@@ -1,8 +1,61 @@
-## Handout 8 Classification
-LDA
+Setup
+```{r}
+heart <- read.table("heart_disease3.txt")
+set.seed(1234)
+# Creating Categorical Variables
+for (i in c(1:4, 6:9)){
+  heart[,i] <- as.factor(heart[,i])
+}
+
+for (i in c(11)){
+  heart[,i] <- factor(heart[,i], ordered = TRUE)
+}
+
+# Excluding Categorical NA's
+heart_no_na <- na.omit(heart)
+```
 
 
-Cross Validated Predictions/Accuracy
+LDA Assumptions
+```{r}
+assump <- na.omit(read.table("heart_disease3.txt"))
+
+library(heplots)
+boxm <- heplots::boxM(assump[,2:11], assump$HeartDiseaseorAttack)
+boxm
+plot(boxm)
+
+
+heart.yes <- subset(assump, HeartDiseaseorAttack == 1)
+heart.no <- subset(assump, HeartDiseaseorAttack == 0)
+
+qqnorm(heart.yes[["BMI"]]); qqline(heart.yes[["BMI"]], col = 2) 
+
+qqnorm(heart.no[["BMI"]]); qqline(heart.no[["BMI"]], col = 2)
+```
+
+
+
+LDA Importance
+```{r}
+library(caret)
+set.seed(1234)
+
+intermed <- heart_no_na
+levels(intermed$HeartDiseaseorAttack) <- c("zero", "one")
+
+ctrl <- trainControl(classProbs = TRUE)
+#ctrl1 <- trainControl(summaryFunction = twoClassSummary, classProbs = TRUE)
+
+lda_mod <- train(HeartDiseaseorAttack~., data = intermed, method = "lda", trControl = ctrl, metric = "Accuracy")
+
+varImp(lda_mod)
+```
+
+
+
+
+Cross Validated Predictions
 ```{r, warning = FALSE}
 set.seed(1234)
 K = 10
@@ -40,7 +93,7 @@ accuracy <- vector("numeric", length(thresholds))
 for (i in 1:length(thresholds)){
   pred <- ifelse(predictions > thresholds[i], 1, 0)
   
-  accuracy[i] <- mean((pred - (as.numeric(heart_no_na$HeartDiseaseorAttack)-1))^2)
+  accuracy[i] <- mean(pred != (as.numeric(heart_no_na$HeartDiseaseorAttack)-1))
   
   myroc <- roc((as.numeric(heart_no_na$HeartDiseaseorAttack)-1), pred)
   auc_vals[i] <- myroc$auc
@@ -49,12 +102,12 @@ for (i in 1:length(thresholds)){
 which(auc_vals == max(auc_vals))
 auc_vals[which(auc_vals == max(auc_vals))]
 # 0.06
-# 0.7360374
+# 0.7391341
 
 which(accuracy == min(accuracy))
 accuracy[which(accuracy == min(accuracy))]
-# 82
-# 0.08914591
+# 83
+# 0.08932384
 ```
 
 
@@ -63,7 +116,7 @@ accuracy[which(accuracy == min(accuracy))]
 Chosen Threshold/Accuracy Test
 ```{r}
 set.seed(1234)
-pred <- ifelse(predictions > 0.06, 1, 0)
+pred <- ifelse(predictions > 0.08146426, 1, 0)
   
 accuracy_final <- mean((pred - (as.numeric(heart_no_na$HeartDiseaseorAttack)-1))^2)
   
@@ -88,14 +141,15 @@ library(ROCR)
 pred <- prediction(predictions, heart_no_na$HeartDiseaseorAttack)
 perf <- performance(pred, "tpr", "fpr")
 
-plot(perf, colorize = TRUE, main = "LDA")
+plot(perf, colorize = TRUE, main = "LDA (Iterative Imputation)")
 auc <- performance(pred, "auc")@y.values[[1]]
 auc
 
-df <- data.frame(cut = perf@alpha.values[[1]], sens = perf@x.values[[1]], spec = perf@y.values[[1]])
+df <- data.frame(cut = perf@alpha.values[[1]], sens = perf@y.values[[1]], spec = perf@x.values[[1]])
 df$add <- df$sens + df$spec
 df$one <- abs(df$add - 1)
-df$distance <- sqrt((1 - df$spec)^2 + (0 - df$sens)^2)
+df$distance <- sqrt((1 - df$sens)^2 + (0 - df$spec)^2)
+df$spec <- 1 - df$spec
 
 # Returns the optimal cutpoint for maximize AUC?
 df[order(df$distance, decreasing = FALSE),][1,]
