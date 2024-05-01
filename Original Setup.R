@@ -10,3 +10,8 @@ for (i in c(1:4, 6:9)){
 for (i in c(11)){
   heart[,i] <- factor(heart[,i], ordered = TRUE)
 }
+
+# Excluding Categorical NA's
+# Note: There are no continuous predictors with NA's in this dataset, 
+# so mean imputation is actually not needed, just removal of rows with categorical NA's
+heart_no_na <- na.omit(heart)
