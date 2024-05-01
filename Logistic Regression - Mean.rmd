@@ -12,16 +12,16 @@ rownames(re_indexed_data_mean) <- 1:nrow(re_indexed_data_mean)
 folds = createFolds(1:nrow(data_mean), k=10, list=F)
 for (i in 1:10){
   k_ind = (folds == i)
-  train = data_mean[!k_ind, ]
-  test = data_mean[k_ind, ]
+  train = re_indexed_data_mean[!k_ind, ]
+  test = re_indexed_data_mean[k_ind, ]
   log_mod <- glm(HeartDiseaseorAttack ~., data = train, family = "binomial")
   log_mod_stepped <- step(log_mod, direction = "both")
   print(log_mod_stepped$coefficients)
-
+  
   for(j in row.names(test)){
     predictions[as.integer(j)] <- predict(log_mod_stepped, test[j,], type = "response")
   }
-
+  
   p_Heart <- ifelse(predict(log_mod_stepped, test, type = "response") > 0.5, 1, 0)
   err = mean(p_Heart != test$HeartDiseaseorAttack)
   cv_err[i] = err
@@ -30,8 +30,8 @@ mean(cv_err)
 ```
 
 
-Manual AUC/Accuracy Maximization
-```{r, warning = FALSE}
+AUC/Accuracy Maximization
+```{r, message = FALSE}
 set.seed(1234)
 library(pROC)
 thresholds <- seq(0.01, 0.9, 0.01)
@@ -49,30 +49,13 @@ for (i in 1:length(thresholds)){
 
 which(auc_vals == max(auc_vals))
 auc_vals[which(auc_vals == max(auc_vals))]
+# 0.09
+# 0.7418178
 
 which(accuracy == min(accuracy))
 accuracy[which(accuracy == min(accuracy))]
-```
-
-
-Chosen Threshold/Accuracy Test
-```{r}
-set.seed(1234)
-pred <- ifelse(predictions > 0.5, 1, 0)
-  
-accuracy_final <- mean((pred - (as.numeric(data_mean$HeartDiseaseorAttack)-1))^2)
-  
-myroc_final <- roc((as.numeric(data_mean$HeartDiseaseorAttack)-1), pred)
-  
-  
-accuracy_final
-myroc_final$auc
-
-plot(myroc_final)
-table(pred, data_mean$HeartDiseaseorAttack)
-
-# 0.5 Threshold -> 0.08967972 accuracy & 0.5304 AUC
-# 0.09 Threshold -> 0.27772242 accuracy & 0.7438 AUC
+# 69, 70, 71
+# 0.08896797
 ```
 
 
@@ -88,11 +71,29 @@ auc <- performance(pred, "auc")@y.values[[1]]
 auc
 
 df <- data.frame(cut = perf@alpha.values[[1]], sens = perf@y.values[[1]], spec = perf@x.values[[1]])
-df$add <- df$sens + df$spec
-df$one <- abs(df$add - 1)
-df$distance <- sqrt((1 - df$spec)^2 + (0 - df$sens)^2)
+df$distance <- sqrt((1 - df$sens)^2 + (0 - df$spec)^2)
 df$spec <- 1 - df$spec
 
 # Returns the optimal cutpoint for maximize AUC?
 df[order(df$distance, decreasing = FALSE),][1,]
+```
+
+
+Chosen Threshold/Accuracy Test
+```{r}
+set.seed(1234)
+cutoff <- df[order(df$distance, decreasing = FALSE),][1,1]
+
+pred <- ifelse(predictions > cutoff, 1, 0)
+
+accuracy_final <- mean((pred - (as.numeric(data_mean$HeartDiseaseorAttack)-1))^2)
+
+myroc_final <- roc((as.numeric(data_mean$HeartDiseaseorAttack)-1), pred)
+
+
+accuracy_final
+myroc_final$auc
+
+plot(myroc_final)
+table(pred, data_mean$HeartDiseaseorAttack)
 ```
