@@ -1,32 +1,43 @@
 Logistic Regression Model
 ```{r}
-data_mean <- heart_no_na
-
 library(caret)
+par(mfrow=c(2, 5))
 set.seed(1234)
+
 cv_err = rep(NA, 10)
-predictions = rep(NA, nrow(data_mean))
+cv_dispersion = rep(NA, 10)
+cv_dev = rep(NA, 10)
+
+predictions <- rep(NA, nrow(data_mean))
 re_indexed_data_mean <- data_mean
 rownames(re_indexed_data_mean) <- 1:nrow(re_indexed_data_mean)
-
 folds = createFolds(1:nrow(data_mean), k=10, list=F)
+
 for (i in 1:10){
   k_ind = (folds == i)
   train = re_indexed_data_mean[!k_ind, ]
   test = re_indexed_data_mean[k_ind, ]
   log_mod <- glm(HeartDiseaseorAttack ~., data = train, family = "binomial")
-  log_mod_stepped <- step(log_mod, direction = "both")
+  log_mod_stepped <- step(log_mod, direction = "both", trace=F)
+  an <- anova(log_mod, log_mod_stepped, test = "Chisq")
   print(log_mod_stepped$coefficients)
-  
+
+  cv_dispersion[i] <- log_mod_stepped$deviance / log_mod_stepped$df.residual
+  cv_dev[i] <- pchisq(log_mod_stepped$deviance, log_mod_stepped$df.residual, lower.tail = F)
+  plot(log_mod_stepped, which = 5)
+
   for(j in row.names(test)){
     predictions[as.integer(j)] <- predict(log_mod_stepped, test[j,], type = "response")
   }
-  
+
   p_Heart <- ifelse(predict(log_mod_stepped, test, type = "response") > 0.5, 1, 0)
   err = mean(p_Heart != test$HeartDiseaseorAttack)
   cv_err[i] = err
+  
 }
 mean(cv_err)
+mean(cv_dispersion)
+cv_dev
 ```
 
 
